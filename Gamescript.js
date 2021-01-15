@@ -1,5 +1,8 @@
 let player = null;
-
+let explosions = [];
+let shootTimer = 0;
+let explosionLife = 100;
+let shotsPerSecond = 2;
 
 function setup() {
     createCanvas(600, 400);
@@ -16,6 +19,37 @@ function draw() {
 
     drawSprites();
 
+    RemoveDeadExplosions();
+
+    Shoot();
+
+}
+
+function RemoveDeadExplosions() {
+    if (explosions.length > 0 && explosions[0].life == 0) {
+        explosions.shift();
+    }
+}
+
+function Shoot() {
+    shootTimer += deltaTime;
+    if (keyIsDown(32) && shootTimer >= 1000 / shotsPerSecond) {
+        CreateExplosion(player.position.x, player.position.y);
+        shootTimer = 0;
+    }
+}
+
+function CreateExplosion(x, y) {
+    let explosion = createSprite(x, y, 5, 5);
+    explosion.life = explosionLife;
+    explosion.draw = DrawExplosion;
+    explosions.push(explosion);
+}
+
+function DrawExplosion() {
+    circle(0, 0, this.width);
+    this.width++;
+    this.height++;
 }
 
 function DrawPlayer() {
