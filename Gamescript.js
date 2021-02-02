@@ -1,17 +1,25 @@
 let player = null;
+let playerSpeed = 10;
 let explosions = [];
 let shootTimer = 0;
 let explosionLife = 100;
 let shotsPerSecond = 2;
 let friendlyMissiles = [];
+let enemyMissiles = null;
 let gun = null;
+let enemyShootTimer = 0;
+let enemyShotsPerSecond = 1;
+
+
 function setup() {
     createCanvas(600, 400);
 
     player = createSprite(width / 2, height / 2, 20, 20);
     player.draw = DrawPlayer;
 
-    gun = createSprite(width / 2, -50, 25, 25);
+    gun = createSprite(width / 2, height - 50, 25, 25);
+
+    angleMode(DEGREES);
 
 }
 
@@ -26,14 +34,66 @@ function draw() {
 
     Shoot();
 
+    EnemyShootMissile();
+
+}
+
+function EnemyShootMissile() {
+    function Shoot() {
+        enemyShootTimer += deltaTime;
+        if (keyIsDown(32) && enemyShootTimer >= 1000 / shotsPerSecond) {
+            CreateEnemyMissiles();
+            enemyShootTimer = 0;
+        }
+    }
 }
 
 function CreateFriendlyMissiles() {
-    let startPosition = gun.position;
-    let endPosition = player.position;
-    let direction = p5.vector.sub(endPosition, startPosition);
+    let startPosition = gun.position.copy();
+    let endPosition = player.position.copy();
+    let direction = p5.Vector.sub(endPosition, startPosition);
 
     let missile = createSprite(startPosition.x, startPosition.y, 5, 5);
+    missile.setSpeed(5, direction.heading());
+    missile.draw = DrawFriendlyMissile;
+    missile["goal"] = endPosition;
+
+}
+
+function CreateEnemyMissiles() {
+    let startX = random(0, width);
+    let startPosition = createVector(startX, 0);
+    let endX = random(0, width);
+    let endPosition = createVector(endX, height);
+    let direction = p5.Vector.sub(endPosition, startPosition);
+
+    let missile = createSprite(startPosition.x, startPosition.y, 5, 5);
+    missile.setSpeed(5, direction.heading());
+    missile["goal"] = endPosition;
+
+    missile.draw = DrawEnemyMissile;
+
+}
+
+function DrawFriendlyMissile() {
+    circle(0, 0, this.width);
+
+    let distance = p5.Vector.dist(this.position, this.goal);
+    if (distance < 5) {
+        this.remove();
+        CreateExplosion(this.position.x, this.position.y);
+    }
+
+}
+
+function DrawEnemyMissile() {
+    circle(0, 0, this.width);
+
+    let distance = p5.Vector.dist(this.position, this.goal);
+    if (distance < 5) {
+        this.remove();
+        CreateExplosion(this.position.x, this.position.y);
+    }
 
 }
 
@@ -46,7 +106,7 @@ function RemoveDeadExplosions() {
 function Shoot() {
     shootTimer += deltaTime;
     if (keyIsDown(32) && shootTimer >= 1000 / shotsPerSecond) {
-        CreateExplosion(player.position.x, player.position.y);
+        CreateFriendlyMissiles();
         shootTimer = 0;
     }
 }
